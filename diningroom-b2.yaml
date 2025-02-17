@@ -1,0 +1,110 @@
+substitutions:
+  relayPin_1: GPIO12
+  relayPin_2: GPIO14
+  # relayPin_3: GPIO15
+  switchPin_1: GPIO5
+  switchPin_2: GPIO4
+  # switchPin_3: GPIO13
+  statusLed: GPIO2
+  deviceName: Dining Room
+
+esphome:
+  name: diningroom-b2
+  platform: ESP8266
+  board: esp8285
+  friendly_name: Dining Room
+  project:
+    name: "MDtronix.3ch smart switch"
+    version: "1.0"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap: {}
+  
+captive_portal:
+logger:
+api:
+ota:
+  - platform: esphome
+web_server:
+debug:
+
+status_led:
+  pin: $statusLed
+  
+output:
+  - platform: gpio
+    pin: $relayPin_1
+    id: relay_1
+  - platform: gpio
+    pin: $relayPin_2
+    id: relay_2
+  # - platform: gpio
+  #   pin: $relayPin_3
+  #   id: relay_3
+
+light:
+  - platform: binary
+    output: relay_1
+    name: Tube
+    id: light_1
+    restore_mode: RESTORE_DEFAULT_ON
+  - platform: binary
+    output: relay_2
+    name: Kitchen Light
+    id: light_2
+    restore_mode: RESTORE_DEFAULT_ON
+  # - platform: binary
+  #   output: relay_3
+  #   name: Night Light
+  #   id: light_3
+
+binary_sensor:
+  # - platform: status
+  #   name: $deviceName Status
+    
+  #- platform: gpio
+   # id: switch_1
+   # pin:
+   #   number: $switchPin_1
+   #   mode: INPUT_PULLUP
+    #  inverted: true
+  #  on_state:
+    #  - light.toggle: light_1
+  #  filters:
+  #    - delayed_on: 500ms
+   #   - delayed_off: 500ms
+
+  - platform: gpio
+    id: Switch_2
+    pin:
+      number: $switchPin_2
+      mode: INPUT_PULLUP
+      inverted: true
+    on_state:
+      - light.toggle: light_2
+    filters:
+      - delayed_on: 500ms
+      - delayed_off: 500ms
+
+  # - platform: gpio
+  #   id: Switch_3
+  #   pin:
+  #     number: $switchPin_3
+  #     mode: INPUT_PULLUP
+  #     inverted: true
+  #   on_state:
+  #     - light.toggle: light_3
+  #   filters:
+  #     - delayed_on: 500ms
+  #     - delayed_off: 500ms
+         
+text_sensor:
+  - platform: debug
+    reset_reason:
+      name: "Reset Reason"   
+
+button:
+  - platform: restart
+    name: restart        

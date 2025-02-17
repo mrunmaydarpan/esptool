@@ -1,0 +1,65 @@
+substitutions:
+  relay1_pin: GPIO12
+  switch1_pin: GPIO14
+  statusled_pin: GPIO2
+
+esphome:
+  name: garage
+  friendly_name: garage
+  project:
+    name: "MDtronix.1ch smart switch"
+    version: "1.0"
+
+esp8266:
+  board: esp01_1m
+
+logger:
+api:
+# mqtt:
+#   broker: homeassistant.local
+#   username: hassio
+#   password: darkmaster
+#   id: mqtt_client
+debug:  
+ota:
+  - platform: esphome
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap: {}
+
+captive_portal:
+web_server:
+
+output:
+  - platform: gpio
+    pin: $relay1_pin
+    id: relay1_id
+
+light:
+  - platform: binary
+    output: relay1_id
+    id: light_id
+    name: Light
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: $switch1_pin
+      mode: INPUT_PULLUP
+      inverted: True
+    id: switch_id
+    on_state:
+      light.toggle: light_id
+
+status_led:
+  pin: $statusled_pin
+
+text_sensor:
+  - platform: debug
+    reset_reason:
+      name: "Reset Reason"
+      
+button:
+  - platform: restart
+    name: restart        

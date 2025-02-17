@@ -1,0 +1,122 @@
+substitutions:
+  relayPin_1: D1
+  relayPin_2: D2
+  relayPin_3: D3
+  relayPin_4: D4
+  switchPin_1: RX
+  switchPin_2: D7
+  switchPin_3: D6
+  switchPin_4: D5
+
+esphome:
+  name: bedroom1
+  platform: ESP8266
+  board: d1_mini
+  friendly_name: Bedroom 1
+  on_boot:
+    switch.turn_on: switch_id
+  project:
+    name: "MDtronix.4ch-old"
+    version: "1.0"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap: {}
+
+captive_portal:
+logger:
+api:  
+# mqtt:
+#   broker: homeassistant.local
+#   username: hassio
+#   password: darkmaster
+#   id: mqtt_client
+ota:
+  - platform: esphome
+web_server:
+debug:
+    
+output:
+  - platform: gpio
+    pin: $relayPin_1
+    id: relay_1
+  - platform: gpio
+    pin: $relayPin_2
+    id: relay_2
+  - platform: gpio
+    pin: $relayPin_3
+    id: relay_3
+  - platform: gpio
+    pin: $relayPin_4
+    id: relay_4
+
+light:
+  - platform: binary
+    output: relay_2
+    name: Tube Light
+    id: tube_id
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: binary
+    output: relay_3
+    name: Bulb
+    id: bulb_id
+    restore_mode: RESTORE_DEFAULT_OFF
+
+fan:
+  - platform: binary
+    output: relay_1
+    name: Fan
+    id: fan_id
+    restore_mode: RESTORE_DEFAULT_OFF
+
+switch:
+  - platform: output
+    output: relay_4
+    name: Socket
+    icon: mdi:power-socket-uk
+    id: switch_id
+    restore_mode: RESTORE_DEFAULT_ON
+
+binary_sensor:
+  - platform: gpio
+    id: Switch_1
+    pin:
+      number: $switchPin_1
+      mode: INPUT_PULLUP
+      inverted: true
+    on_state:
+      - switch.toggle: switch_id
+  - platform: gpio
+    id: Switch_2
+    pin:
+      number: $switchPin_2
+      mode: INPUT_PULLUP
+      inverted: true
+    on_state:
+      - light.toggle: tube_id
+  - platform: gpio
+    id: Switch_3
+    pin:
+      number: $switchPin_3
+      mode: INPUT_PULLUP
+      inverted: true
+    on_state:
+      - light.toggle: bulb_id
+  - platform: gpio
+    id: Switch_4
+    pin:
+      number: $switchPin_4
+      mode: INPUT_PULLUP
+      inverted: true
+    on_state:
+      - fan.toggle: fan_id
+
+text_sensor:
+  - platform: debug
+    reset_reason:
+      name: "Reset Reason"         
+
+button:
+  - platform: restart
+    name: restart  

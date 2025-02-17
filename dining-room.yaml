@@ -1,0 +1,124 @@
+substitutions:
+  relaypin_1: GPIO5
+  relaypin_2: GPIO4
+  relaypin_3: GPIO0
+  relaypin_4: GPIO2
+  switchpin_1: GPIO3
+  switchpin_2: GPIO13
+  switchpin_3: GPIO12
+  switchpin_4: GPIO14
+  statusled: GPIO16
+
+esphome:
+  name: dining-room
+  friendly_name: Dining Room
+  project:
+    name: "MDtronix.4ch smart swtich"
+    version: "2.0"
+    
+esp8266:
+  board: esp01_1m
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap: {}
+
+captive_portal:
+web_server:
+logger:
+debug:  
+api:
+# mqtt:
+#   broker: homeassistant.local
+#   username: hassio
+#   password: darkmaster
+#   id: mqtt_client
+ota:
+  - platform: esphome
+  
+output:
+  - platform: gpio
+    pin: $relaypin_1
+    id: relay_1
+  - platform: gpio
+    pin: $relaypin_2
+    id: relay_2    
+  - platform: gpio
+    pin: $relaypin_3
+    id: relay_3    
+  - platform: gpio
+    pin: $relaypin_4
+    id: relay_4
+
+light:
+  - platform: binary
+    output: relay_2
+    name: Bulb
+    id: light_id
+    restore_mode: RESTORE_DEFAULT_OFF
+
+fan:
+  - platform: binary
+    output: relay_4
+    name: Fan
+    id: fan_id
+    restore_mode: RESTORE_DEFAULT_OFF
+
+switch:
+  - platform: output
+    output: relay_1
+    name: TV
+    id: switch1_id
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: output
+    output: relay_3
+    name: Set-top Box
+    id: switch2_id
+    restore_mode: RESTORE_DEFAULT_OFF
+
+binary_sensor:
+  - platform: gpio
+    id: switch_id_1
+    pin:
+      number: $switchpin_1
+      mode: INPUT_PULLUP
+      inverted: True
+    on_state:
+      - switch.toggle: switch1_id
+  - platform: gpio
+    id: switch_id_2
+    pin:
+      number: $switchpin_2
+      mode: INPUT_PULLUP
+      inverted: True
+    on_state:
+      - light.toggle: light_id
+  - platform: gpio
+    id: switch_id_3
+    pin:
+      number: $switchpin_3
+      mode: INPUT_PULLUP
+      inverted: True
+    on_state:
+      - switch.toggle: switch2_id
+  - platform: gpio
+    id: switch_id_4
+    pin:
+      number: $switchpin_4
+      mode: INPUT_PULLUP
+      inverted: True
+    on_state:
+      - fan.toggle: fan_id
+
+status_led:
+  pin: $statusled
+
+text_sensor:
+  - platform: debug
+    reset_reason:
+      name: "Reset Reason"     
+
+button:
+  - platform: restart
+    name: restart        

@@ -1,0 +1,169 @@
+substitutions:
+  relayPin_1: GPIO12
+  relayPin_2: GPIO14
+  relayPin_3: GPIO0
+  relayPin_4: GPIO02
+  switchPin_1: GPIO05
+  switchPin_2: GPIO04
+  switchPin_3: GPIO13
+  switchPin_4: GPIO10
+  
+esphome:
+  name: bedroom2
+  platform: ESP8266
+  board: esp8285
+  friendly_name: Bedroom 2
+  project:
+    name: "MDtronix.4ch_V3"
+    version: "3.0"
+  includes:
+    - irfan.h    
+    
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap: {}
+  # manual_ip:
+  #   static_ip: 192.168.0.72
+  #   gateway: 192.168.0.1
+  #   subnet: 255.255.255.0
+
+captive_portal:
+logger:
+api: 
+ota:
+  - platform: esphome
+web_server:
+debug:
+
+mqtt:
+  broker: home.local
+  username: hassio
+  password: darkmaster
+  discover_ip: false
+  discovery: false
+  id: mqtt_client
+  
+output:
+  - platform: gpio
+    pin: $relayPin_1
+    id: relay_1
+  - platform: gpio
+    pin: $relayPin_2
+    id: relay_2
+  - platform: gpio
+    pin: $relayPin_3
+    id: relay_3
+  - platform: gpio
+    pin: $relayPin_4
+    id: relay_4
+  - platform: custom
+    type: float
+    outputs:
+      id: fanoutput
+    lambda: |-
+      auto IRFan = new IRFanOutput();
+      App.register_component(IRFan);
+      return {IRFan};
+   
+light:
+  - platform: binary
+    output: relay_1
+    name: Backyard Light
+    id: light_1
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: binary
+    output: relay_2
+    name: Tube Light
+    id: light_2
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: binary
+    output: relay_3
+    name: Bulb
+    id: light_3
+    restore_mode: RESTORE_DEFAULT_OFF
+
+fan:
+  # - platform: binary
+  #   output: relay_4
+  #   name: Fan
+  #   id: fan_1
+  #   restore_mode: RESTORE_DEFAULT_OFF
+  - platform: speed
+    output: fanoutput
+    speed_count: 6
+    name: Fan
+    id: fan_1
+    restore_mode: RESTORE_DEFAULT_OFF
+    on_speed_set:
+      lambda: |-
+        if (id(fan_1).speed == 1)
+        {
+          // Fan speed is 1, do something here
+          id(mqtt_client).publish("cmnd/irblaster/IRSend", "{\"Protocol\":\"NEC\",\"Bits\":32,\"Data\":\"0xCFD12E\",\"DataLSB\":\"0xF38B74\",\"Repeat\":0}"); 
+        }
+        else if(id(fan_1).speed==2)
+        {
+          id(mqtt_client).publish("cmnd/irblaster/IRSend", "{\"Protocol\":\"NEC\",\"Bits\":32,\"Data\":\"0xCF09F6\",\"DataLSB\":\"0xF3906F\",\"Repeat\":0}"); 
+        }
+        else if(id(fan_1).speed==3)
+        {
+          id(mqtt_client).publish("cmnd/irblaster/IRSend", "{\"Protocol\":\"NEC\",\"Bits\":32,\"Data\":\"0xCF51AE\",\"DataLSB\":\"0xF38A75\",\"Repeat\":0}"); 
+        }
+        else if(id(fan_1).speed==4)
+        {
+          id(mqtt_client).publish("cmnd/irblaster/IRSend", "{\"Protocol\":\"NEC\",\"Bits\":32,\"Data\":\"0xCFC936\",\"DataLSB\":\"0xF3936C\",\"Repeat\":0}"); 
+        }
+        else if(id(fan_1).speed==5)
+        {
+          id(mqtt_client).publish("cmnd/irblaster/IRSend", "{\"Protocol\":\"NEC\",\"Bits\":32,\"Data\":\"0xCF11EE\",\"DataLSB\":\"0xF38877\",\"Repeat\":0}"); 
+        }
+        else if(id(fan_1).speed==6)
+        {
+          id(mqtt_client).publish("cmnd/irblaster/IRSend", "{\"Protocol\":\"NEC\",\"Bits\":32,\"Data\":\"0xCFF10E\",\"DataLSB\":\"0xF38F70\",\"Repeat\":0}"); 
+        }
+binary_sensor:  
+  - platform: gpio
+    id: switch_1
+    pin:
+      number: $switchPin_1
+      mode: INPUT_PULLUP
+      inverted: true
+    on_state:
+      - light.toggle: light_1
+      
+  - platform: gpio
+    id: Switch_2
+    pin:
+      number: $switchPin_2
+      mode: INPUT_PULLUP
+      inverted: true
+    on_state:
+      - light.toggle: light_2
+    
+  - platform: gpio
+    id: Switch_3
+    pin:
+      number: $switchPin_3
+      mode: INPUT_PULLUP
+      inverted: true
+    on_state:
+      - light.toggle: light_3
+      
+  - platform: gpio
+    id: Switch_4
+    pin:
+      number: $switchPin_4
+      mode: INPUT_PULLUP
+      inverted: true
+    on_state:
+      - fan.toggle: fan_1
+
+text_sensor:
+  - platform: debug
+    reset_reason:
+      name: "Reset Reason"         
+
+button:
+  - platform: restart
+    name: restart      
