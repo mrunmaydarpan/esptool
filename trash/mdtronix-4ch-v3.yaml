@@ -59,7 +59,7 @@ wifi:
 captive_portal:
 
 dashboard_import:
-  package_import_url: github://mrunmaydarpan/esptool/test.yaml
+  package_import_url: github://athom-tech/athom-configs/athom-relay-board-x4.yaml
 
 binary_sensor:
   - platform: status
@@ -140,6 +140,12 @@ text_sensor:
   - platform: wifi_info
     ip_address:
       name: "IP Address"
+      entity_category: diagnostic
+    ssid:
+      name: "Connected SSID"
+      entity_category: diagnostic
+    mac_address:
+      name: "Mac Address"
       entity_category: diagnostic
 
   #  Creates a sensor showing when the device was last restarted
